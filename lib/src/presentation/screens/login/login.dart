@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medicaredriver/src/presentation/controller/registrationcontroller/registrationcontroller.dart';
+import 'package:medicaredriver/src/presentation/screens/registration/driverRegistration.dart';
 import 'package:medicaredriver/src/presentation/widgets/gradientbutton.dart';
 
 class Login extends StatelessWidget {
@@ -80,7 +81,10 @@ class Login extends StatelessWidget {
                               fontSize: isKeyboardVisible ? 24 : 30,
                               color: const Color(0xff353459),
                             ),
-                            child: const Text("Login"),
+                            child: const Text(
+                              "Ambulance \n Login",
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
                       ),
@@ -177,7 +181,7 @@ class Login extends StatelessWidget {
                                   Text("don't have an account? "),
                                   GestureDetector(
                                     onTap: () {
-                                      // Get.to(() => UserRegistration());
+                                      Get.to(() => DriverRegistration());
                                     },
                                     child: Text(
                                       "Register here",

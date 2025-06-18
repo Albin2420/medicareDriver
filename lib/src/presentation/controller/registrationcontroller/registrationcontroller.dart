@@ -11,6 +11,7 @@ import 'package:medicaredriver/src/domain/repositories/login/loginrepo.dart';
 import 'package:medicaredriver/src/domain/repositories/registration/driverRegistrationRepo.dart';
 
 import 'package:medicaredriver/src/presentation/controller/appstartupcontroller/appstartupcontroller.dart';
+import 'package:medicaredriver/src/presentation/screens/Home/home.dart';
 import 'package:medicaredriver/src/presentation/screens/registration/otp.dart';
 
 class Registrationcontroller extends GetxController {
@@ -78,7 +79,7 @@ class Registrationcontroller extends GetxController {
         },
         (R) {
           ctrl.saveAccessToken(R['access_token']);
-          // Get.offAll(() => Landingscreen());
+          Get.offAll(() => Home());
         },
       );
     }
