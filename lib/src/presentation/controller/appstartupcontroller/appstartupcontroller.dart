@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:medicaredriver/src/presentation/screens/login/login.dart';
+import 'package:medicaredriver/src/presentation/screens/splash/splashscreen.dart';
 
 class Appstartupcontroller extends GetxController {
   final _secureStorage = FlutterSecureStorage();
@@ -20,7 +21,7 @@ class Appstartupcontroller extends GetxController {
     // Your task here
     var tk = await getAccessToken();
     if (tk == null) {
-      Get.offAll(() => Login());
+      Get.offAll(() => Splashscreen());
     } else {
       // Get.offAll(() => Landingscreen());
     }
