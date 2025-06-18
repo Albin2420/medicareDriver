@@ -8,8 +8,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:medicaredriver/src/presentation/controller/registrationcontroller/registrationcontroller.dart';
 import 'package:medicaredriver/src/presentation/widgets/gradientbutton.dart';
 
-class UserRegistration extends StatelessWidget {
-  const UserRegistration({super.key});
+class DriverRegistration extends StatelessWidget {
+  const DriverRegistration({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +69,7 @@ class UserRegistration extends StatelessWidget {
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 350),
                         curve: Curves.easeInOutCubic,
-                        height: isKeyboardVisible ? 120 : 180,
+                        height: isKeyboardVisible ? 80 : 100,
                         width: double.infinity,
                         color: Colors.white,
                         child: Center(
@@ -77,10 +77,13 @@ class UserRegistration extends StatelessWidget {
                             duration: const Duration(milliseconds: 350),
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.w700,
-                              fontSize: isKeyboardVisible ? 24 : 30,
+                              fontSize: isKeyboardVisible ? 20 : 24,
                               color: const Color(0xff353459),
                             ),
-                            child: const Text("User Registration"),
+                            child: const Text(
+                              "Ambulance Registration",
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
                       ),
@@ -93,14 +96,14 @@ class UserRegistration extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const SizedBox(height: 20),
+                              // const SizedBox(height: 20),
 
                               // First Name
                               Text(
-                                "First Name",
+                                "Vehicle Owner Name",
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w500,
-                                  fontSize: 20,
+                                  fontSize: 16,
                                   color: const Color(0xff353459),
                                 ),
                               ),
@@ -109,7 +112,7 @@ class UserRegistration extends StatelessWidget {
                               TextField(
                                 controller: ctrl.firstNamecontroller,
                                 decoration: InputDecoration(
-                                  hintText: "Enter First Name",
+                                  hintText: "Full Name",
                                   hintStyle: const TextStyle(
                                     color: Colors.black54,
                                   ),
@@ -126,14 +129,14 @@ class UserRegistration extends StatelessWidget {
                                 ),
                               ),
 
-                              const SizedBox(height: 36),
+                              const SizedBox(height: 28),
 
                               // Last Name
                               Text(
-                                "Last Name",
+                                "Vehicle Owner Phone No.",
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w500,
-                                  fontSize: 20,
+                                  fontSize: 16,
                                   color: const Color(0xff353459),
                                 ),
                               ),
@@ -141,7 +144,7 @@ class UserRegistration extends StatelessWidget {
                               TextField(
                                 controller: ctrl.secondNamecontroller,
                                 decoration: InputDecoration(
-                                  hintText: "Enter Last Name",
+                                  hintText: "Phone No.",
                                   hintStyle: const TextStyle(
                                     color: Colors.black54,
                                   ),
@@ -158,9 +161,135 @@ class UserRegistration extends StatelessWidget {
                                 ),
                               ),
 
-                              const SizedBox(height: 36),
+                              const SizedBox(height: 28),
 
-                              SizedBox(height: isKeyboardVisible ? 40 : 60),
+                              Text(
+                                "Vehicle Owner Email ID",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                  color: const Color(0xff353459),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              TextField(
+                                controller: ctrl.firstNamecontroller,
+                                decoration: InputDecoration(
+                                  hintText: "Enter Vehicle Owner’s Email ID",
+                                  hintStyle: const TextStyle(
+                                    color: Colors.black54,
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xffEBEBEF),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 14,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(50),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 28),
+
+                              Text(
+                                "Vehicle Number",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                  color: const Color(0xff353459),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              TextField(
+                                controller: ctrl.firstNamecontroller,
+                                decoration: InputDecoration(
+                                  hintText: "Registration number of ambulance",
+                                  hintStyle: const TextStyle(
+                                    color: Colors.black54,
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xffEBEBEF),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 14,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(50),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 28),
+
+                              Text(
+                                "Driver Name",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                  color: const Color(0xff353459),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              TextField(
+                                controller: ctrl.firstNamecontroller,
+                                decoration: InputDecoration(
+                                  hintText: "Full Name",
+                                  hintStyle: const TextStyle(
+                                    color: Colors.black54,
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xffEBEBEF),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 14,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(50),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 28),
+
+                              Text(
+                                "Driver Phone No.",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                  color: const Color(0xff353459),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              TextField(
+                                controller: ctrl.firstNamecontroller,
+                                decoration: InputDecoration(
+                                  hintText: "Phone No.",
+                                  hintStyle: const TextStyle(
+                                    color: Colors.black54,
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xffEBEBEF),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 14,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(50),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 28),
                             ],
                           ),
                         ),
@@ -176,7 +305,7 @@ class UserRegistration extends StatelessWidget {
       bottomNavigationBar: isKeyboardVisible
           ? const SizedBox.shrink()
           : BottomAppBar(
-              color: Colors.white,
+              color: Colors.transparent,
               elevation: 8,
               child: GradientBorderContainer(
                 name: 'Submit',
