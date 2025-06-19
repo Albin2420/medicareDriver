@@ -13,10 +13,10 @@ class Locationrepoimpl extends Locationrepo {
   Future<Either<Failure, Map<String, dynamic>>> location({
     required double longitude,
     required double latitude,
-    required String landmark,
+
     required String accesstoken,
   }) async {
-    final url = '${Url.baseUrl}/${Url.loc}';
+    final url = '${Url.baseUrl}/${Url.driverloc}';
     log("POST: $url");
 
     try {
@@ -28,11 +28,7 @@ class Locationrepoimpl extends Locationrepo {
             'Authorization': 'Bearer $accesstoken',
           },
         ),
-        data: {
-          "latitude": latitude,
-          "longitude": longitude,
-          "landmark": landmark,
-        },
+        data: {"latitude": latitude, "longitude": longitude},
       );
 
       log("Response Status: ${response.statusCode}");
@@ -41,13 +37,7 @@ class Locationrepoimpl extends Locationrepo {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseBody = response.data as Map<String, dynamic>;
 
-        return right({
-          "Name": responseBody["first_name"],
-          "mobileNo": responseBody["mobile"],
-          "ambulance_number": responseBody["ambulance_number"],
-          "id": responseBody["media_id"],
-          "eta_minutes": responseBody["eta_minutes"].toString(),
-        });
+        return right({});
       } else {
         return left(Failure(message: 'Server error: ${response.statusCode}'));
       }

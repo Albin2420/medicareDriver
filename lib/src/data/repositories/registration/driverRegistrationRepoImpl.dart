@@ -58,11 +58,14 @@ class DriverRegistrationRepoImpl extends DriverRegistrationRepo {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> saveDriver({
-    required String frstName,
-    required String secondName,
-    required String phoneNumber,
+    required String ownerName,
+    required String ownerNumber,
+    required String ownerEmail,
+    required String ambulanceNumber,
+    required String driverName,
+    required String driverPhoneNumber,
   }) async {
-    final url = '${Url.baseUrl}/${Url.users}';
+    final url = '${Url.baseUrl}/${Url.registration}';
     log("POST: $url");
 
     try {
@@ -70,9 +73,12 @@ class DriverRegistrationRepoImpl extends DriverRegistrationRepo {
         url,
         options: Options(headers: {'Content-Type': 'application/json'}),
         data: {
-          'first_name': frstName,
-          'last_name': secondName,
-          'mobile': phoneNumber,
+          'owner_name': ownerName,
+          'owner_number': ownerNumber,
+          'owner_email': ownerEmail,
+          'ambulance_number': ambulanceNumber,
+          'driver_name': driverName,
+          'mobile': driverPhoneNumber,
         },
       );
 
@@ -81,8 +87,10 @@ class DriverRegistrationRepoImpl extends DriverRegistrationRepo {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseBody = response.data as Map<String, dynamic>;
-        log("response body: $responseBody");
-        return right({"access_token": responseBody["access_token"]});
+        return right({
+          "access_token": responseBody["access_token"],
+          "id": responseBody["driver"]['id'],
+        });
       } else {
         return left(Failure(message: 'Server error: ${response.statusCode}'));
       }

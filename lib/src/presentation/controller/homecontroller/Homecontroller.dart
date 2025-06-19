@@ -2,6 +2,7 @@
 
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
@@ -14,6 +15,8 @@ import 'package:medicaredriver/src/domain/repositories/location/locationrepo.dar
 import 'package:medicaredriver/src/presentation/controller/appstartupcontroller/appstartupcontroller.dart';
 import 'package:medicaredriver/src/presentation/screens/Home/home.dart';
 import 'package:open_route_service/open_route_service.dart';
+
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart' as fs;
 
@@ -40,22 +43,28 @@ class Homecontroller extends GetxController {
   RxString? eta = RxString("");
   RxString name = RxString("");
 
+  WebSocketChannel? channel;
+
   final latlng.LatLng start = latlng.LatLng(10.1081324, 76.3585433);
   final latlng.LatLng end = latlng.LatLng(10.120000, 76.360000);
 
   final RxList<latlng.LatLng> routePoints = RxList<latlng.LatLng>();
+
+  ValueNotifier<String?> socketMessage = ValueNotifier(null);
 
   final openrouteservice = OpenRouteService(
     apiKey: fs.dotenv.env['ORS_API_KEY'] ?? 'defaultApi',
     defaultProfile: ORSProfile.drivingCar,
   );
 
+  var isready;
+
   @override
   void onInit() async {
     super.onInit();
     log("Home controller initialized");
-    startListeningToLocation();
     accessToken.value = (await ctrlr.getAccessToken())!;
+    startListeningToLocation();
   }
 
   Future<void> startListeningToLocation() async {
@@ -80,76 +89,48 @@ class Homecontroller extends GetxController {
         ),
       );
 
-      _positionStream!.listen((Position position) {
+      _positionStream!.listen((Position position) async {
         log("pos : ${position.latitude} ${position.longitude}");
         lat.value = position.latitude;
         long.value = position.longitude;
 
-        getAddressFromLatLng(
-          latitude: position.latitude,
+        isready = await lcrepo.location(
           longitude: position.longitude,
-        );
-      });
-    } catch (e) {
-      log("error:$e");
-    }
-  }
-
-  Future<void> getAddressFromLatLng({
-    required latitude,
-    required longitude,
-  }) async {
-    try {
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        latitude,
-        longitude,
-      );
-
-      if (placemarks.isNotEmpty) {
-        Placemark place = placemarks.first;
-
-        location.value =
-            '${place.name}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea} ,${place.postalCode}';
-
-        log("final loc : $location");
-
-        getRoute();
-      }
-    } catch (e) {
-      log('Error in reverse geocoding: $e');
-    }
-  }
-
-  void registerEmergency() async {
-    if (accessToken.value != "initial" && accessToken.value != "") {
-      try {
-        EasyLoading.show();
-        final res = await lcrepo.location(
-          longitude: long.value,
-          latitude: lat.value,
-          landmark: location.value,
+          latitude: position.latitude,
           accesstoken: accessToken.value,
         );
-        res.fold(
-          (l) {
-            EasyLoading.dismiss();
-            log("failed");
-          },
-          (R) {
-            EasyLoading.dismiss();
-            ambulanceRegNumber.value = R["ambulance_number"];
-            bookingId.value = R["id"];
-            mobNo.value = R["mobileNo"];
-            eta?.value = R["eta_minutes"];
-            name.value = R['Name'];
-            ambulancestatus.value = "Ambulance is on the way!";
-          },
-        );
-        Get.to(() => Home());
-      } catch (e) {
-        EasyLoading.dismiss();
-        log("Error in registerEmergency() :$e");
-      }
+        isready.fold((l) {}, (r) {
+          //listen to socket for observe the requests
+        });
+      });
+      connect(id: 1);
+    } catch (e) {
+      log("error in startListeningToLocation():$e");
+    }
+  }
+
+  void connect({required int id}) {
+    try {
+      final uri = Uri.parse('ws://13.203.89.173:8001/ws/driver/$id');
+
+      channel = WebSocketChannel.connect(uri);
+      log('🔌 Connecting to $uri');
+
+      channel!.stream.listen(
+        (data) {
+          log('✅ Message from server: $data');
+          socketMessage.value = data; // Push to UI
+        },
+        onDone: () {
+          log('❌ Connection closed.');
+        },
+        onError: (error) {
+          log('🚨 Stream error: $error');
+        },
+        cancelOnError: true,
+      );
+    } catch (e, stack) {
+      log("❗ Exception in connect(): $e\n$stack");
     }
   }
 
