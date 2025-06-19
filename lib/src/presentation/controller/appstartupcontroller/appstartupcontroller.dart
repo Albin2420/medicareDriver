@@ -29,8 +29,16 @@ class Appstartupcontroller extends GetxController {
     }
   }
 
-  Future<void> saveAccessToken(String token) async {
-    await _secureStorage.write(key: 'access_token', value: token);
+  Future<void> saveAccessToken({
+    required String token,
+    required String id,
+  }) async {
+    try {
+      await _secureStorage.write(key: 'access_token', value: token);
+      await _secureStorage.write(key: 'id', value: id);
+    } catch (e) {
+      log("error in saveAccessToken():$e");
+    }
   }
 
   Future<String?> getAccessToken() async {

@@ -175,23 +175,23 @@ class Login extends StatelessWidget {
 
                               const SizedBox(height: 36),
 
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text("don't have an account? "),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Get.to(() => DriverRegistration());
-                                    },
-                                    child: Text(
-                                      "Register here",
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              // Row(
+                              //   mainAxisAlignment: MainAxisAlignment.center,
+                              //   children: [
+                              //     Text("don't have an account? "),
+                              //     GestureDetector(
+                              //       onTap: () {
+                              //         Get.to(() => DriverRegistration());
+                              //       },
+                              //       child: Text(
+                              //         "Register here",
+                              //         style: GoogleFonts.poppins(
+                              //           fontWeight: FontWeight.w500,
+                              //         ),
+                              //       ),
+                              //     ),
+                              //   ],
+                              // ),
                             ],
                           ),
                         ),
@@ -206,15 +206,33 @@ class Login extends StatelessWidget {
       ),
       bottomNavigationBar: isKeyboardVisible
           ? const SizedBox.shrink()
-          : BottomAppBar(
-              color: Colors.white,
-              elevation: 8,
-              child: GradientBorderContainer(
-                name: 'Submit',
-                onTap: () {
-                  ctrl.login();
-                },
-              ),
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("don't have an account? "),
+                    GestureDetector(
+                      onTap: () {
+                        Get.to(() => DriverRegistration());
+                      },
+                      child: Text(
+                        "Register here",
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                GradientBorderContainer(
+                  name: 'Submit',
+                  onTap: () {
+                    ctrl.login();
+                  },
+                ),
+                SizedBox(height: 8),
+              ],
             ),
     );
   }

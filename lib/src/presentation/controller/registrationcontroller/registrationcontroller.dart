@@ -16,10 +16,13 @@ import 'package:medicaredriver/src/presentation/screens/registration/otp.dart';
 
 class Registrationcontroller extends GetxController {
   final ctrl = Get.find<Appstartupcontroller>();
-  TextEditingController firstNamecontroller = TextEditingController();
-  TextEditingController secondNamecontroller = TextEditingController();
-  TextEditingController phoneNumbercontroller = TextEditingController();
-  TextEditingController otpcontroller = TextEditingController();
+  TextEditingController vechicleOwnerName = TextEditingController();
+  TextEditingController vechicleOwnerPhoneNumber = TextEditingController();
+  TextEditingController vechicleOwnerEmailId = TextEditingController();
+  TextEditingController vechicleNumber = TextEditingController();
+
+  TextEditingController driverName = TextEditingController();
+  TextEditingController driverPhoneNumber = TextEditingController();
 
   //login
   TextEditingController phncontrolller = TextEditingController();
@@ -27,12 +30,6 @@ class Registrationcontroller extends GetxController {
 
   DriverRegistrationRepo userRepo = DriverRegistrationRepoImpl();
   Loginrepo loginrepo = Loginrepoimpl();
-
-  void checkName() {
-    if (firstNamecontroller.text.length >= 3) {
-      Get.to(() => Otp());
-    }
-  }
 
   void sendotp() {
     Fluttertoast.showToast(
@@ -44,44 +41,66 @@ class Registrationcontroller extends GetxController {
 
   void submitRegistration() async {
     try {
-      if (otpcontroller.text == "807456") {
-        EasyLoading.show();
-        final resp = await userRepo.saveDriver(
-          frstName: firstNamecontroller.text,
-          secondName: secondNamecontroller.text,
-          phoneNumber: phoneNumbercontroller.text,
-        );
+      EasyLoading.show();
+      final resp = await userRepo.saveDriver(
+        ownerName: vechicleOwnerName.text,
+        ownerNumber: vechicleOwnerPhoneNumber.text,
+        ownerEmail: vechicleOwnerEmailId.text,
+        ambulanceNumber: vechicleNumber.text,
+        driverName: driverName.text,
+        driverPhoneNumber: driverPhoneNumber.text,
+      );
 
-        resp.fold(
+      resp.fold(
+        (l) {
+          log('ooops');
+          EasyLoading.dismiss();
+          Fluttertoast.showToast(msg: "unable to register");
+        },
+        (r) {
+          log("token :${r['access_token']}");
+          log("id :${r['id']}");
+          ctrl.saveAccessToken(
+            id: r['id'].toString(),
+            token: r['access_token'],
+          );
+          EasyLoading.dismiss();
+          Get.offAll(() => Home());
+        },
+      );
+    } catch (e) {
+      EasyLoading.dismiss();
+      log("error in submitRegistration() :$e");
+    }
+  }
+
+  Future<void> login() async {
+    try {
+      EasyLoading.show();
+      if (oTpcontrolller.text == "807456") {
+        final response = await loginrepo.login(
+          phoneNumber: phncontrolller.text,
+        );
+        response.fold(
           (l) {
+            log("failed");
             EasyLoading.dismiss();
-            Fluttertoast.showToast(msg: "unable to register");
+            Fluttertoast.showToast(msg: "oops couldn,t login");
           },
-          (r) {
-            ctrl.saveAccessToken(r['access_token']);
+          (R) {
+            ctrl.saveAccessToken(
+              token: R['access_token'],
+              id: R['id'].toString(),
+            );
             EasyLoading.dismiss();
-            // Get.offAll(() => Landingscreen());
+            Get.offAll(() => Home());
           },
         );
       }
     } catch (e) {
       EasyLoading.dismiss();
-      log("error:$e");
-    }
-  }
-
-  Future<void> login() async {
-    if (oTpcontrolller.text == "807456") {
-      final response = await loginrepo.login(phoneNumber: phncontrolller.text);
-      response.fold(
-        (l) {
-          log("failed");
-        },
-        (R) {
-          ctrl.saveAccessToken(R['access_token']);
-          Get.offAll(() => Home());
-        },
-      );
+      log("error in login():$e");
+      Fluttertoast.showToast(msg: "error in login():$e");
     }
   }
 }
