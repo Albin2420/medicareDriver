@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:medicaredriver/src/core/network/failure.dart';
 import 'package:medicaredriver/src/core/url.dart';
 
-import 'package:medicaredriver/src/domain/repositories/location/locationrepo.dart';
+import 'package:medicaredriver/src/domain/repositories/location/commonLocation/locationrepo.dart';
 
 class Locationrepoimpl extends Locationrepo {
   final Dio _dio = Dio();

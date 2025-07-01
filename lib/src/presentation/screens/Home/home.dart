@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart' as lat;
 import 'package:medicaredriver/src/presentation/controller/homecontroller/Homecontroller.dart';
 import 'package:medicaredriver/src/presentation/screens/Home/widgets/acceptButton.dart';
+import 'package:medicaredriver/src/presentation/screens/Home/widgets/recTile.dart';
 import 'package:medicaredriver/src/presentation/screens/Home/widgets/rejectButton.dart';
 
 class Home extends StatelessWidget {
@@ -17,6 +18,7 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     final ctrl = Get.put(Homecontroller());
     return Scaffold(
+      extendBody: true,
       backgroundColor: Colors.white,
       appBar: AppBar(
         scrolledUnderElevation: 0,
@@ -50,21 +52,14 @@ class Home extends StatelessWidget {
             ),
           ],
         ),
-        // METHOD 2: Add action button in AppBar to show bottom sheet
-        // actions: [
-        //   IconButton(
-        //     onPressed: () => _showEmergencySheet(context),
-        //     icon: Icon(Icons.emergency, color: Colors.red),
-        //   ),
-        // ],
       ),
       body: Obx(
         () => Stack(
           children: [
             FlutterMap(
               options: MapOptions(
-                initialCenter: lat.LatLng(10.1081324, 76.3585433),
-                initialZoom: 18,
+                initialCenter: lat.LatLng(10.1081715, 76.3586718),
+                initialZoom: 14,
               ),
               children: [
                 TileLayer(
@@ -73,21 +68,25 @@ class Home extends StatelessWidget {
                 ),
                 MarkerLayer(
                   markers: [
-                    // Marker(
-                    //   point: ctrl.start,
-                    //   width: 40,
-                    //   height: 40,
-                    //   child: Image.asset("assets/icons/accident.png"),
-                    // ),
-                    // Marker(
-                    //   point: ctrl.end,
-                    //   width: 40,
-                    //   height: 40,
-                    //   child: Image.asset("assets/icons/loc.png"),
-                    // ),
+                    Marker(
+                      point: ctrl.start,
+                      width: 40,
+                      height: 40,
+                      child: Image.asset("assets/icons/location.png"),
+                    ),
+                    if (ctrl.showroute.value)
+                      Marker(
+                        point: lat.LatLng(
+                          ctrl.endLatitude.value,
+                          ctrl.endLongitude.value,
+                        ),
+                        width: 40,
+                        height: 40,
+                        child: Image.asset("assets/icons/gps.png"),
+                      ),
                   ],
                 ),
-                if (ctrl.routePoints.isNotEmpty)
+                if (ctrl.routePoints.isNotEmpty && ctrl.showroute.value)
                   PolylineLayer(
                     polylines: [
                       Polyline(
@@ -106,156 +105,467 @@ class Home extends StatelessWidget {
                 if (message == null) return SizedBox.shrink();
                 return Align(
                   alignment: Alignment.topCenter,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(32),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(
-                            0.2,
-                          ), // Adjust opacity as needed
-                          offset: Offset(6, 6),
-                          blurRadius: 12,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    margin: EdgeInsets.only(top: 30),
-                    width: MediaQuery.of(context).size.width - 60,
-                    padding: EdgeInsets.only(top: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Centered Request ID
-                        Text(
-                          "Request ID: 112323",
-                          style: GoogleFonts.poppins(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w400,
-                            fontSize: 16,
+                  child: Obx(() {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(
+                              0.2,
+                            ), // Adjust opacity as needed
+                            offset: Offset(6, 6),
+                            blurRadius: 12,
+                            spreadRadius: 2,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-
-                        SizedBox(height: 10),
-
-                        Divider(thickness: 1),
-
-                        SizedBox(height: 20),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Location : ',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Color(0xff353459),
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
+                        ],
+                      ),
+                      margin: EdgeInsets.only(top: 30),
+                      width: MediaQuery.of(context).size.width - 30,
+                      padding: EdgeInsets.only(top: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Centered Request ID
+                          Text(
+                            "Request ID: ${ctrl.dt['assignment_id']}",
+                            style: GoogleFonts.poppins(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w400,
+                              fontSize: 16,
                             ),
-                            Text(
-                              'Destination',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+                            textAlign: TextAlign.center,
+                          ),
 
-                        SizedBox(height: 10),
+                          SizedBox(height: 10),
 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Distance : ',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Color(0xff353459),
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            Text(
-                              '6 km',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+                          Divider(thickness: 1),
 
-                        SizedBox(height: 10),
+                          SizedBox(height: 20),
 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'ETA : ',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Color(0xff353459),
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            Text(
-                              '6 min',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 22),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 16, right: 16),
-                          child: SizedBox(
-                            height: 40,
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8, right: 8),
                             child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Expanded(
-                                  child: Acceptbutton(
-                                    onPressed: () {
-                                      log("Accepted");
-                                    },
+                                Text(
+                                  'Location : ',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Color(0xff353459),
+                                    fontWeight: FontWeight.w500,
                                   ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                SizedBox(width: 8),
                                 Expanded(
-                                  child: RejectBtn(
-                                    onPressed: () {
-                                      log("rejected");
-                                    },
+                                  child: Text(
+                                    '${ctrl.dt["location"]["landmark"]}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                        SizedBox(height: 22),
-                      ],
-                    ),
-                  ),
+
+                          SizedBox(height: 10),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Distance : ',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: Color(0xff353459),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                ctrl.distancetoLocation.value,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: 10),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'ETA : ',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: Color(0xff353459),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                ctrl.eta.value,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 22),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16, right: 16),
+                            child: SizedBox(
+                              height: 40,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Acceptbutton(
+                                      onPressed: () {
+                                        log("Accepted");
+                                        ctrl.accepted(
+                                          assignmentId: ctrl.dt['assignment_id']
+                                              .toString(),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: RejectBtn(
+                                      onPressed: () {
+                                        log("rejected");
+                                        ctrl.rejected(
+                                          assignmentId:
+                                              ctrl.dt['assignment_id'],
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 22),
+                        ],
+                      ),
+                    );
+                  }),
                 );
               },
             ),
           ],
         ),
       ),
+      bottomNavigationBar: Obx(() {
+        if (ctrl.isonTrip.value == false) {
+          return SizedBox();
+        } else {
+          return GestureDetector(
+            onTap: () {
+              ctrl.toggleDtails();
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2), // light shadow
+                    blurRadius: 20, // softness of the shadow
+                    spreadRadius: 5, // how wide the shadow spreads
+                    offset: Offset(0, -6), // x: 0, y: -5 (upward shadow)
+                  ),
+                ],
+              ),
+
+              child: Obx(() {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 28),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        bottom: 16,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Left icon
+                          SizedBox(width: 18),
+                          SizedBox(
+                            width: 20,
+                            height: 28,
+                            child: Image.asset("assets/icons/destination.png"),
+                          ),
+                          SizedBox(width: 16),
+
+                          // Expanded Text in center
+                          Expanded(
+                            child: Text(
+                              ctrl.patientLandmark.value,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 20,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          SizedBox(width: 18),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    ctrl.showdetails.value == false
+                        ? Text(
+                            "ETA : ${ctrl.eta.value}",
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text(
+                                ctrl.distancetoLocation.value,
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 20,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              Text(
+                                "ETA : ${ctrl.eta.value}",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                    ctrl.showdetails.value == false
+                        ? SizedBox(height: 23)
+                        : Column(
+                            children: [
+                              SizedBox(height: 18),
+                              Divider(),
+                              ctrl.showadditionalDetails.value == true
+                                  ? Column(
+                                      children: [
+                                        SizedBox(height: 24),
+                                        ctrl.imageList.isNotEmpty
+                                            ? Text(
+                                                "Photos & videos",
+                                                style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 18,
+                                                  color: Color(0xff353459),
+                                                ),
+                                              )
+                                            : SizedBox(),
+                                        SizedBox(height: 12),
+                                        ctrl.imageList.isNotEmpty
+                                            ? Container(
+                                                height: 130,
+                                                color: Colors.white,
+                                                padding: EdgeInsets.only(
+                                                  top: 16,
+                                                  left: 16,
+                                                  right: 16,
+                                                  bottom: 16,
+                                                ),
+                                                child: ListView.builder(
+                                                  scrollDirection:
+                                                      Axis.horizontal,
+                                                  itemCount:
+                                                      ctrl.imageList.length,
+                                                  itemBuilder: (context, index) {
+                                                    return Container(
+                                                      margin:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 6,
+                                                          ),
+                                                      width: 100,
+                                                      color: Colors
+                                                          .grey, // Adjust as needed
+                                                      child: Image.network(
+                                                        ctrl.imageList[index],
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              )
+                                            : SizedBox(),
+                                        SizedBox(height: 24),
+                                        ctrl.audioList.isNotEmpty
+                                            ? Text(
+                                                "Audio Recording",
+                                                style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 18,
+                                                  color: Color(0xff353459),
+                                                ),
+                                              )
+                                            : SizedBox(),
+                                        SizedBox(height: 12),
+                                        ctrl.audioList.isNotEmpty
+                                            ? Container(
+                                                padding: EdgeInsets.only(
+                                                  right: 16,
+                                                  left: 16,
+                                                ),
+                                                height: 110,
+                                                color: Colors.white,
+                                                child: ListView.builder(
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                        return RecTile(
+                                                          index: index,
+                                                        );
+                                                      },
+                                                  itemCount:
+                                                      ctrl.audioList.length,
+                                                ),
+                                              )
+                                            : SizedBox(),
+                                      ],
+                                    )
+                                  : Padding(
+                                      padding: const EdgeInsets.only(
+                                        left: 24,
+                                        right: 24,
+                                        top: 18,
+                                      ),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          ctrl.toggleadditionalDetails();
+                                        },
+                                        child: Container(
+                                          padding: EdgeInsets.only(
+                                            top: 14,
+                                            bottom: 14,
+                                            left: 20,
+                                            right: 20,
+                                          ),
+                                          width: double.infinity,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              32,
+                                            ),
+                                            border: Border.all(
+                                              color: Color(0xff3534594d),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                "View Additional Details",
+                                                style: GoogleFonts.poppins(
+                                                  color: Color(0xff353459),
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 22,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 24,
+                                  right: 24,
+                                  bottom: 24,
+                                  top: 18,
+                                ),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    ctrl.makePhoneCall(
+                                      ctrl.patientPhoneNumber.value,
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.only(
+                                      top: 14,
+                                      bottom: 14,
+                                      left: 20,
+                                      right: 20,
+                                    ),
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(50),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color(0xffE75757),
+                                          Color(0xff8C0707),
+                                        ],
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        SizedBox(width: 10),
+                                        SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: Image.asset(
+                                            "assets/icons/phone.png",
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          "call Patient",
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ],
+                );
+              }),
+            ),
+          );
+        }
+      }),
     );
   }
 }
