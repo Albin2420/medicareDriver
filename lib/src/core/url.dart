@@ -4,4 +4,6 @@ class Url {
   static String registration = "drivers";
   static String login = "auth/driver-login";
   static String driverloc = "driver/location";
+  static String respond = "ride/respond";
+  static String driverlocOnTrip = "driver/location/update";
 }
