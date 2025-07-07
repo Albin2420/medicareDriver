@@ -6,4 +6,5 @@ class Url {
   static String driverloc = "driver/location";
   static String respond = "ride/respond";
   static String driverlocOnTrip = "driver/location/update";
+  static String checkExpiry = "check-token-expiry";
 }

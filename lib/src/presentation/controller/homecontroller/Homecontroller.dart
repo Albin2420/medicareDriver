@@ -144,16 +144,40 @@ class Homecontroller extends GetxController {
             latitude: position.latitude,
             accesstoken: accessToken.value,
           );
-          routePoints.removeWhere(
-            (point) =>
-                (point.latitude - position.latitude).abs() < epsilon &&
-                (point.longitude - position.longitude).abs() < epsilon,
-          );
+          checkAndRemoveReachedPoint(lat.value, long.value);
         }
       });
       connect(id: 16); //remove hardcode value
     } catch (e) {
       log("error in startListeningToLocation():$e");
+    }
+  }
+
+  void checkAndRemoveReachedPoint(double currentLat, double currentLng) {
+    if (routePoints.isNotEmpty) {
+      final driverPosition = latlng.LatLng(currentLat, currentLng);
+      final nextPoint = routePoints.first;
+
+      log("on Target ======>>>>>> $nextPoint");
+
+      final distance = const latlng.Distance().as(
+        latlng.LengthUnit.Meter,
+        driverPosition,
+        nextPoint,
+      );
+
+      log("dis:$distance");
+
+      if (distance < 1500) {
+        log(
+          "🚗 Reached waypoint: ${nextPoint.latitude}, ${nextPoint.longitude} (Dist: ${distance.toStringAsFixed(2)}m)",
+        );
+        routePoints.removeAt(0);
+      } else {
+        log("too far");
+      }
+    } else {
+      log("points empty");
     }
   }
 
@@ -187,6 +211,8 @@ class Homecontroller extends GetxController {
               await getDistanceAndRouteFromOSRM(
                 startLat: lat.value,
                 startLon: long.value,
+                // endLat: 10.1066164,
+                // endLon: 76.363186,
                 endLat: dt['location']['latitude'],
                 endLon: dt['location']['longitude'],
               );
@@ -350,7 +376,7 @@ class Homecontroller extends GetxController {
           routePoints.add(latlng.LatLng(lat, lon));
         }
 
-        log("✅ OSRM route updated: ${routePoints.length} points");
+        log("✅ OSRM route updated: $routePoints");
 
         // Distance formatting
         distancetoLocation.value = distanceMeters < 1000

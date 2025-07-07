@@ -3,12 +3,15 @@ import 'dart:developer';
 import 'package:get/get.dart';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:medicaredriver/src/data/repositories/tokenRepoImpl/tokenRepoImpl.dart';
+import 'package:medicaredriver/src/domain/repositories/token/tokenRepo.dart';
 import 'package:medicaredriver/src/presentation/screens/Home/home.dart';
 import 'package:medicaredriver/src/presentation/screens/login/login.dart';
 import 'package:medicaredriver/src/presentation/screens/splash/splashscreen.dart';
 
 class Appstartupcontroller extends GetxController {
   final _secureStorage = FlutterSecureStorage();
+  Tokenrepo tokenrepo = Tokenrepoimpl();
 
   @override
   void onInit() {
@@ -18,14 +21,24 @@ class Appstartupcontroller extends GetxController {
   }
 
   Future<void> checktoken() async {
-    await Future.delayed(Duration(seconds: 1, microseconds: 500));
-    // Your task here
     var tk = await getAccessToken();
 
-    if (tk == null) {
+    if (tk == null || tk == '') {
       Get.offAll(() => Login());
     } else {
-      Get.offAll(() => Home());
+      final res = await tokenrepo.checkToken(accesstoken: tk ?? '');
+      res.fold(
+        (l) {
+          Get.offAll(() => Login());
+        },
+        (r) {
+          if (r['expired'] == false) {
+            Get.offAll(() => Home());
+          } else {
+            Get.offAll(() => Login());
+          }
+        },
+      );
     }
   }
 
@@ -35,7 +48,7 @@ class Appstartupcontroller extends GetxController {
   }) async {
     try {
       await _secureStorage.write(key: 'access_token', value: token);
-      await _secureStorage.write(key: 'id', value: id);
+      await _secureStorage.write(key: 'driverId', value: id);
     } catch (e) {
       log("error in saveAccessToken():$e");
     }
@@ -43,6 +56,10 @@ class Appstartupcontroller extends GetxController {
 
   Future<String?> getAccessToken() async {
     return await _secureStorage.read(key: 'access_token');
+  }
+
+  Future<String?> getDriverId() async {
+    return await _secureStorage.read(key: 'driverId');
   }
 
   Future<void> deleteAccessToken() async {

@@ -8,13 +8,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Constant.init(context: context);
     return GetMaterialApp(
-      // showPerformanceOverlay: true,
       title: 'MediCare',
       debugShowCheckedModeBanner: false,
       builder: EasyLoading.init(),
-      // initialBinding: ConnectivityBinding(),
       home: Splashscreen(),
     );
   }
