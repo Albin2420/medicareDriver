@@ -61,7 +61,7 @@ class Registrationcontroller extends GetxController {
           log("token :${r['access_token']}");
           log("id :${r['id']}");
           ctrl.saveAccessToken(
-            id: r['id'].toString(),
+            id: r['driverId'].toString(),
             token: r['access_token'],
           );
           EasyLoading.dismiss();
@@ -83,7 +83,7 @@ class Registrationcontroller extends GetxController {
         );
         response.fold(
           (l) {
-            log("failed");
+            log("failed $l");
             EasyLoading.dismiss();
             Fluttertoast.showToast(msg: "oops couldn,t login");
           },
