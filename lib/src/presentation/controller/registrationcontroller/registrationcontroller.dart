@@ -59,11 +59,8 @@ class Registrationcontroller extends GetxController {
         },
         (r) {
           log("token :${r['access_token']}");
-          log("id :${r['id']}");
-          ctrl.saveAccessToken(
-            id: r['driverId'].toString(),
-            token: r['access_token'],
-          );
+          ctrl.saveAccessToken(token: r['access_token']);
+          ctrl.saveId(id: r['id'].toString());
           EasyLoading.dismiss();
           Get.offAll(() => Home());
         },
@@ -88,10 +85,8 @@ class Registrationcontroller extends GetxController {
             Fluttertoast.showToast(msg: "oops couldn,t login");
           },
           (R) {
-            ctrl.saveAccessToken(
-              token: R['access_token'],
-              id: R['id'].toString(),
-            );
+            ctrl.saveAccessToken(token: R['access_token']);
+            ctrl.saveId(id: R['id'].toString());
             EasyLoading.dismiss();
             Get.offAll(() => Home());
           },

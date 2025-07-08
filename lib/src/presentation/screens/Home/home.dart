@@ -53,105 +53,138 @@ class Home extends StatelessWidget {
           ],
         ),
       ),
-      body: Obx(
-        () => Stack(
-          children: [
-            FlutterMap(
-              options: MapOptions(
-                initialCenter: lat.LatLng(10.1081715, 76.3586718),
-                initialZoom: 14,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  // no subdomains to avoid OSM warning
+      body: Obx(() {
+        if (ctrl.lat.value != 0 && ctrl.long.value != 0) {
+          return Stack(
+            children: [
+              FlutterMap(
+                options: MapOptions(
+                  initialCenter: lat.LatLng(ctrl.lat.value, ctrl.long.value),
+                  initialZoom: 18,
                 ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: ctrl.start,
-                      width: 40,
-                      height: 40,
-                      child: Image.asset("assets/icons/location.png"),
-                    ),
-                    if (ctrl.showroute.value)
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    // no subdomains to avoid OSM warning
+                  ),
+                  MarkerLayer(
+                    markers: [
                       Marker(
-                        point: lat.LatLng(
-                          ctrl.endLatitude.value,
-                          ctrl.endLongitude.value,
-                        ),
+                        point: lat.LatLng(ctrl.lat.value, ctrl.long.value),
                         width: 40,
                         height: 40,
-                        child: Image.asset("assets/icons/gps.png"),
+                        child: Image.asset("assets/icons/location.png"),
                       ),
-                  ],
-                ),
-                if (ctrl.routePoints.isNotEmpty && ctrl.showroute.value)
-                  PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: ctrl.routePoints.value,
-                        strokeWidth: 4.0,
-                        color: Colors.blue,
-                      ),
+                      if (ctrl.routePoints.isNotEmpty && ctrl.showroute.value)
+                        Marker(
+                          point: lat.LatLng(
+                            ctrl.endLatitude.value,
+                            ctrl.endLongitude.value,
+                          ),
+                          width: 40,
+                          height: 40,
+                          child: Image.asset("assets/icons/destination.png"),
+                        ),
                     ],
                   ),
-              ],
-            ),
+                  if (ctrl.routePoints.isNotEmpty && ctrl.showroute.value)
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: ctrl.routePoints.value,
+                          strokeWidth: 4.0,
+                          color: const Color.fromARGB(255, 1, 10, 17),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
 
-            ValueListenableBuilder<String?>(
-              valueListenable: ctrl.socketMessage,
-              builder: (context, message, _) {
-                if (message == null) return SizedBox.shrink();
-                return Align(
-                  alignment: Alignment.topCenter,
-                  child: Obx(() {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(32),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(
-                              0.2,
-                            ), // Adjust opacity as needed
-                            offset: Offset(6, 6),
-                            blurRadius: 12,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      margin: EdgeInsets.only(top: 30),
-                      width: MediaQuery.of(context).size.width - 30,
-                      padding: EdgeInsets.only(top: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Centered Request ID
-                          Text(
-                            "Request ID: ${ctrl.dt['assignment_id']}",
-                            style: GoogleFonts.poppins(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w400,
-                              fontSize: 16,
+              ValueListenableBuilder<String?>(
+                valueListenable: ctrl.socketMessage,
+                builder: (context, message, _) {
+                  if (message == null) return SizedBox.shrink();
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: Obx(() {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(32),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(
+                                0.2,
+                              ), // Adjust opacity as needed
+                              offset: Offset(6, 6),
+                              blurRadius: 12,
+                              spreadRadius: 2,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
+                          ],
+                        ),
+                        margin: EdgeInsets.only(top: 30),
+                        width: MediaQuery.of(context).size.width - 30,
+                        padding: EdgeInsets.only(top: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Centered Request ID
+                            Text(
+                              "Request ID: ${ctrl.dt['assignment_id']}",
+                              style: GoogleFonts.poppins(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w400,
+                                fontSize: 16,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
 
-                          SizedBox(height: 10),
+                            SizedBox(height: 10),
 
-                          Divider(thickness: 1),
+                            Divider(thickness: 1),
 
-                          SizedBox(height: 20),
+                            SizedBox(height: 20),
 
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8, right: 8),
-                            child: Row(
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8, right: 8),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Location : ',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: Color(0xff353459),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      '${ctrl.dt["location"]["landmark"]}',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            SizedBox(height: 10),
+
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Location : ',
+                                  'Distance : ',
                                   style: GoogleFonts.poppins(
                                     fontSize: 16,
                                     color: Color(0xff353459),
@@ -159,119 +192,95 @@ class Home extends StatelessWidget {
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                                Expanded(
-                                  child: Text(
-                                    '${ctrl.dt["location"]["landmark"]}',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                Text(
+                                  ctrl.distancetoLocation.value,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ],
                             ),
-                          ),
 
-                          SizedBox(height: 10),
+                            SizedBox(height: 10),
 
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Distance : ',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  color: Color(0xff353459),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              Text(
-                                ctrl.distancetoLocation.value,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: 10),
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'ETA : ',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  color: Color(0xff353459),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              Text(
-                                ctrl.eta.value,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 22),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16, right: 16),
-                            child: SizedBox(
-                              height: 40,
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Acceptbutton(
-                                      onPressed: () {
-                                        log("Accepted");
-                                        ctrl.accepted(
-                                          assignmentId: ctrl.dt['assignment_id']
-                                              .toString(),
-                                        );
-                                      },
-                                    ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'ETA : ',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Color(0xff353459),
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: RejectBtn(
-                                      onPressed: () {
-                                        log("rejected");
-                                        ctrl.rejected(
-                                          assignmentId:
-                                              ctrl.dt['assignment_id'],
-                                        );
-                                      },
-                                    ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                Text(
+                                  ctrl.eta.value,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 22),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                right: 16,
+                              ),
+                              child: SizedBox(
+                                height: 40,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Acceptbutton(
+                                        onPressed: () {
+                                          log("Accepted");
+                                          ctrl.accepted(
+                                            assignmentId: ctrl
+                                                .dt['assignment_id']
+                                                .toString(),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Expanded(
+                                      child: RejectBtn(
+                                        onPressed: () {
+                                          log("rejected");
+                                          ctrl.rejected(
+                                            assignmentId:
+                                                ctrl.dt['assignment_id'],
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: 22),
-                        ],
-                      ),
-                    );
-                  }),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+                            SizedBox(height: 22),
+                          ],
+                        ),
+                      );
+                    }),
+                  );
+                },
+              ),
+            ],
+          );
+        } else {
+          return SizedBox();
+        }
+      }),
       bottomNavigationBar: Obx(() {
         if (ctrl.isonTrip.value == false) {
           return SizedBox();

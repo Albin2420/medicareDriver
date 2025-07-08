@@ -89,7 +89,7 @@ class DriverRegistrationRepoImpl extends DriverRegistrationRepo {
         final responseBody = response.data as Map<String, dynamic>;
         return right({
           "access_token": responseBody["access_token"],
-          "driverId": responseBody["driver"]['id'],
+          "id": responseBody["driver"]['id'],
         });
       } else {
         return left(Failure(message: 'Server error: ${response.statusCode}'));
