@@ -45,7 +45,7 @@ class Homecontroller extends GetxController {
   RxBool isok = RxBool(false);
   WebSocketChannel? channel;
   static const epsilon = 0.00001;
-  final latlng.LatLng start = latlng.LatLng(10.1081715, 76.3586718);
+
   final RxList<latlng.LatLng> routePoints = RxList<latlng.LatLng>();
   Driverresponse driverresponse = Driverresponseimpl();
   ValueNotifier<String?> socketMessage = ValueNotifier(null);
@@ -73,6 +73,8 @@ class Homecontroller extends GetxController {
   RxBool showdetails = RxBool(false);
   RxBool showadditionalDetails = RxBool(false);
 
+  RxInt id = RxInt(-1);
+
   var imageList = [].obs;
   var audioList = [].obs;
 
@@ -88,6 +90,7 @@ class Homecontroller extends GetxController {
     log("Home controller initialized()");
     accessToken.value = (await ctrlr.getAccessToken())!;
     startListeningToLocation();
+    id.value = await ctrlr.getId();
   }
 
   void toggleDtails() {
@@ -147,7 +150,7 @@ class Homecontroller extends GetxController {
           checkAndRemoveReachedPoint(lat.value, long.value);
         }
       });
-      connect(id: 16); //remove hardcode value
+      connect(id: id.value); //remove hardcode value
     } catch (e) {
       log("error in startListeningToLocation():$e");
     }
@@ -168,7 +171,7 @@ class Homecontroller extends GetxController {
 
       log("dis:$distance");
 
-      if (distance < 1500) {
+      if (distance < 20) {
         log(
           "🚗 Reached waypoint: ${nextPoint.latitude}, ${nextPoint.longitude} (Dist: ${distance.toStringAsFixed(2)}m)",
         );
@@ -211,8 +214,6 @@ class Homecontroller extends GetxController {
               await getDistanceAndRouteFromOSRM(
                 startLat: lat.value,
                 startLon: long.value,
-                // endLat: 10.1066164,
-                // endLon: 76.363186,
                 endLat: dt['location']['latitude'],
                 endLon: dt['location']['longitude'],
               );

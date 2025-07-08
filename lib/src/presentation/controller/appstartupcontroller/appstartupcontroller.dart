@@ -42,27 +42,25 @@ class Appstartupcontroller extends GetxController {
     }
   }
 
-  Future<void> saveAccessToken({
-    required String token,
-    required String id,
-  }) async {
+  Future<void> saveAccessToken({required String token}) async {
     try {
       await _secureStorage.write(key: 'access_token', value: token);
-      await _secureStorage.write(key: 'driverId', value: id);
     } catch (e) {
       log("error in saveAccessToken():$e");
     }
   }
 
+  Future<void> saveId({required String id}) async {
+    log("saveId() :$id");
+    await _secureStorage.write(key: 'userId', value: id);
+  }
+
+  Future<int> getId() async {
+    final userIdString = await _secureStorage.read(key: 'userId');
+    return int.parse(userIdString ?? '0');
+  }
+
   Future<String?> getAccessToken() async {
     return await _secureStorage.read(key: 'access_token');
-  }
-
-  Future<String?> getDriverId() async {
-    return await _secureStorage.read(key: 'driverId');
-  }
-
-  Future<void> deleteAccessToken() async {
-    await _secureStorage.delete(key: 'access_token');
   }
 }
