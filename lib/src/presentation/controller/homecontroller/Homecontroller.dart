@@ -5,14 +5,14 @@ import 'dart:developer';
 
 import 'dart:convert';
 
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/semantics.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
-import 'package:geocoding/geocoding.dart';
+
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart' as latlng;
@@ -23,7 +23,7 @@ import 'package:medicaredriver/src/domain/repositories/location/commonLocation/l
 import 'package:medicaredriver/src/domain/repositories/location/driverlocationInTrip/tripLocationRepo.dart';
 import 'package:medicaredriver/src/domain/repositories/response/driverresponse.dart';
 import 'package:medicaredriver/src/presentation/controller/appstartupcontroller/appstartupcontroller.dart';
-import 'package:medicaredriver/src/presentation/screens/Home/home.dart';
+
 import 'package:open_route_service/open_route_service.dart';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -44,7 +44,6 @@ class Homecontroller extends GetxController {
   Triplocationrepo triplocationrepo = Triplocationrepoimpl();
   RxBool isok = RxBool(false);
   WebSocketChannel? channel;
-  static const epsilon = 0.00001;
 
   final RxList<latlng.LatLng> routePoints = RxList<latlng.LatLng>();
   Driverresponse driverresponse = Driverresponseimpl();
@@ -66,7 +65,7 @@ class Homecontroller extends GetxController {
   RxString patientLandmark = RxString("");
   RxString assignMentId = RxString("");
   RxString patientPhoneNumber = RxString("");
-  RxString distancetoLocation = RxString('');
+  RxString distancetoLocation = RxString("");
   RxString eta = RxString("");
   RxDouble endLongitude = RxDouble(0);
   RxDouble endLatitude = RxDouble(0);
@@ -89,8 +88,8 @@ class Homecontroller extends GetxController {
     super.onInit();
     log("Home controller initialized()");
     accessToken.value = (await ctrlr.getAccessToken())!;
-    startListeningToLocation();
     id.value = await ctrlr.getId();
+    startListeningToLocation();
   }
 
   void toggleDtails() {
@@ -196,31 +195,21 @@ class Homecontroller extends GetxController {
           try {
             dt.value = jsonDecode(data);
 
-            log("from server:$data");
+            if (dt['type'] == "ride_notification") {
+              bookingNotification(data: data);
+            }
 
-            if (dt.containsKey("images") || dt.containsKey("audios")) {
-              log("image file catched");
+            if (dt['type'] == "ride_confirmation") {
+              rideConfirmation();
+            }
 
+            if (dt['type'] == "image_uploade" || dt['type'] == "audio upload") {
               if (dt.containsKey("images")) {
                 imageList.value = dt['images'];
               }
 
               if (dt.containsKey("audios")) {
                 audioList.value = dt['audios'];
-              }
-              return;
-            } else {
-              log("latitude:${dt['location']['latitude']}");
-              await getDistanceAndRouteFromOSRM(
-                startLat: lat.value,
-                startLon: long.value,
-                endLat: dt['location']['latitude'],
-                endLon: dt['location']['longitude'],
-              );
-
-              if (isok.value == true) {
-                rideId.value = dt["ride_id"];
-                socketMessage.value = data;
               }
             }
           } catch (e) {
@@ -237,6 +226,50 @@ class Homecontroller extends GetxController {
       );
     } catch (e, stack) {
       log("❗ Exception in connect(): $e\n$stack");
+    }
+  }
+
+  Future<void> bookingNotification({required dynamic data}) async {
+    try {
+      var dt = jsonDecode(data);
+      await getDistanceAndRouteFromOSRM(
+        startLat: lat.value,
+        startLon: long.value,
+        endLat: dt['location']['latitude'],
+        endLon: dt['location']['longitude'],
+      );
+
+      if (isok.value == true) {
+        rideId.value = dt["ride_id"];
+        patientPhoneNumber.value = dt['mobile'];
+        patientLandmark.value = dt['location']['landmark'];
+        socketMessage.value = data;
+      }
+    } catch (e) {
+      log("bookingNotification():$e");
+    }
+  }
+
+  Future<void> rideConfirmation() async {
+    try {
+      showroute.value = true;
+      isonTrip.value = true;
+      socketMessage.value = null;
+    } catch (e) {
+      log("Error in rideConfirmation():$e");
+    }
+  }
+
+  void sendResponse({required Map<String, dynamic> message}) {
+    try {
+      if (channel != null) {
+        channel!.sink.add(jsonEncode(message));
+        log("📤 Sent: $message");
+      } else {
+        log("❌ Cannot send message, WebSocket not connected.");
+      }
+    } catch (e) {
+      log("error in sendResponse():$e");
     }
   }
 
@@ -279,49 +312,9 @@ class Homecontroller extends GetxController {
     }
   }
 
-  void accepted({required String assignmentId}) async {
-    try {
-      var ds = await driverresponse.respondBooking(
-        assignmentId: assignmentId,
-        status: "accepted",
-        accesstoken: accessToken.value,
-      );
-      ds.fold(
-        (l) {
-          log("failed in accepting()");
-        },
-        (r) {
-          patientPhoneNumber.value = r['phoneNumber'];
-          patientLandmark.value = r['landmark'];
-          showroute.value = true;
-          isonTrip.value = true;
-          socketMessage.value = null;
-          log("submitted successfully");
-        },
-      );
-    } catch (e) {
-      log("Error in accepted():$e");
-    }
-  }
-
-  void rejected({required String assignmentId}) async {
-    try {
-      var ds = await driverresponse.respondBooking(
-        assignmentId: assignmentId,
-        status: "rejected",
-        accesstoken: accessToken.value,
-      );
-      ds.fold((l) {}, (r) {
-        log("rejected");
-      });
-    } catch (e) {
-      log("Error in rejected():$e");
-    }
-  }
-
   Future<void> makePhoneCall(String phoneNumber) async {
     try {
-      bool? res = await FlutterPhoneDirectCaller.callNumber(phoneNumber);
+      await FlutterPhoneDirectCaller.callNumber(phoneNumber);
     } catch (e) {
       log("error:$e");
     }
@@ -360,8 +353,6 @@ class Homecontroller extends GetxController {
 
       final response = await http.get(url);
 
-      log("response :${response.body}");
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final route = data['routes'][0];
@@ -376,8 +367,6 @@ class Homecontroller extends GetxController {
           final lon = point[0] as double;
           routePoints.add(latlng.LatLng(lat, lon));
         }
-
-        log("✅ OSRM route updated: $routePoints");
 
         // Distance formatting
         distancetoLocation.value = distanceMeters < 1000
