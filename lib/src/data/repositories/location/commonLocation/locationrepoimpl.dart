@@ -35,7 +35,7 @@ class Locationrepoimpl extends Locationrepo {
       log("Response Body: ${response.data}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseBody = response.data as Map<String, dynamic>;
+        // final responseBody = response.data as Map<String, dynamic>;
 
         return right({});
       } else {

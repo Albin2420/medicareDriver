@@ -67,6 +67,9 @@ class Home extends StatelessWidget {
                     urlTemplate:
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     // no subdomains to avoid OSM warning
+                    userAgentPackageName:
+                        'com.yourcompany12.yourapp', // required
+                    tileProvider: NetworkTileProvider(),
                   ),
                   MarkerLayer(
                     markers: [
@@ -114,9 +117,7 @@ class Home extends StatelessWidget {
                           borderRadius: BorderRadius.circular(32),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(
-                                0.2,
-                              ), // Adjust opacity as needed
+                              color: Colors.black.withOpacity(0.2),
                               offset: Offset(6, 6),
                               blurRadius: 12,
                               spreadRadius: 2,
@@ -140,13 +141,9 @@ class Home extends StatelessWidget {
                               ),
                               textAlign: TextAlign.center,
                             ),
-
                             SizedBox(height: 10),
-
                             Divider(thickness: 1),
-
                             SizedBox(height: 20),
-
                             Padding(
                               padding: const EdgeInsets.only(left: 8, right: 8),
                               child: Row(
@@ -242,11 +239,13 @@ class Home extends StatelessWidget {
                                     Expanded(
                                       child: Acceptbutton(
                                         onPressed: () {
-                                          log("Accepted");
-                                          ctrl.accepted(
-                                            assignmentId: ctrl
-                                                .dt['assignment_id']
-                                                .toString(),
+                                          ctrl.sendResponse(
+                                            message: {
+                                              "type": "ride_response",
+                                              "assignment_id":
+                                                  ctrl.dt['assignment_id'],
+                                              "status": "accepted",
+                                            },
                                           );
                                         },
                                       ),
@@ -256,9 +255,13 @@ class Home extends StatelessWidget {
                                       child: RejectBtn(
                                         onPressed: () {
                                           log("rejected");
-                                          ctrl.rejected(
-                                            assignmentId:
-                                                ctrl.dt['assignment_id'],
+                                          ctrl.sendResponse(
+                                            message: {
+                                              "type": "ride_response",
+                                              "assignment_id":
+                                                  ctrl.dt['assignment_id'],
+                                              "status": "accepted",
+                                            },
                                           );
                                         },
                                       ),

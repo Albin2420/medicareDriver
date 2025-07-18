@@ -7,7 +7,6 @@ import 'package:medicaredriver/src/data/repositories/tokenRepoImpl/tokenRepoImpl
 import 'package:medicaredriver/src/domain/repositories/token/tokenRepo.dart';
 import 'package:medicaredriver/src/presentation/screens/Home/home.dart';
 import 'package:medicaredriver/src/presentation/screens/login/login.dart';
-import 'package:medicaredriver/src/presentation/screens/splash/splashscreen.dart';
 
 class Appstartupcontroller extends GetxController {
   final _secureStorage = FlutterSecureStorage();
@@ -26,7 +25,7 @@ class Appstartupcontroller extends GetxController {
     if (tk == null || tk == '') {
       Get.offAll(() => Login());
     } else {
-      final res = await tokenrepo.checkToken(accesstoken: tk ?? '');
+      final res = await tokenrepo.checkToken(accesstoken: tk);
       res.fold(
         (l) {
           Get.offAll(() => Login());
@@ -57,6 +56,7 @@ class Appstartupcontroller extends GetxController {
 
   Future<int> getId() async {
     final userIdString = await _secureStorage.read(key: 'userId');
+    log("userIdString in getId():$userIdString");
     return int.parse(userIdString ?? '0');
   }
 
