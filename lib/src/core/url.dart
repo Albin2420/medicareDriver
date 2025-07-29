@@ -7,4 +7,6 @@ class Url {
   static String respond = "ride/respond";
   static String driverlocOnTrip = "driver/location/update";
   static String checkExpiry = "check-token-expiry";
+
+  static String driverCheckonGoingRide = "driver/check-ongoing-ride";
 }

@@ -13,7 +13,7 @@ class Tokenrepoimpl extends Tokenrepo {
     required String accesstoken,
   }) async {
     final url = '${Url.baseUrl}/${Url.checkExpiry}';
-    log("POST: $url  token :$accesstoken");
+    log("POST: $url");
 
     try {
       final response = await _dio.get(

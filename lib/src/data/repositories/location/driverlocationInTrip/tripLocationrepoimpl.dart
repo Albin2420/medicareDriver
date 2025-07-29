@@ -28,7 +28,6 @@ class Triplocationrepoimpl extends Triplocationrepo {
             'Authorization': 'Bearer $accesstoken',
           },
         ),
-        // data: {"ride_id": rideId, "latitude": latitude, "longitude": longitude},
       );
 
       log("Response Status: ${response.statusCode}");

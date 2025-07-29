@@ -10,6 +10,7 @@ import 'package:medicaredriver/src/presentation/controller/homecontroller/Homeco
 import 'package:medicaredriver/src/presentation/screens/Home/widgets/acceptButton.dart';
 import 'package:medicaredriver/src/presentation/screens/Home/widgets/recTile.dart';
 import 'package:medicaredriver/src/presentation/screens/Home/widgets/rejectButton.dart';
+import 'package:medicaredriver/src/presentation/screens/Home/widgets/ridecloseButton.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -238,8 +239,8 @@ class Home extends StatelessWidget {
                                   children: [
                                     Expanded(
                                       child: Acceptbutton(
-                                        onPressed: () {
-                                          ctrl.sendResponse(
+                                        onPressed: () async {
+                                          await ctrl.sendRideResponse(
                                             message: {
                                               "type": "ride_response",
                                               "assignment_id":
@@ -253,16 +254,17 @@ class Home extends StatelessWidget {
                                     SizedBox(width: 8),
                                     Expanded(
                                       child: RejectBtn(
-                                        onPressed: () {
+                                        onPressed: () async {
                                           log("rejected");
-                                          ctrl.sendResponse(
+                                          await ctrl.sendRideResponse(
                                             message: {
                                               "type": "ride_response",
                                               "assignment_id":
                                                   ctrl.dt['assignment_id'],
-                                              "status": "accepted",
+                                              "status": "rejected",
                                             },
                                           );
+                                          ctrl.clearRide();
                                         },
                                       ),
                                     ),
@@ -288,33 +290,33 @@ class Home extends StatelessWidget {
         if (ctrl.isonTrip.value == false) {
           return SizedBox();
         } else {
-          return GestureDetector(
-            onTap: () {
-              ctrl.toggleDtails();
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2), // light shadow
-                    blurRadius: 20, // softness of the shadow
-                    spreadRadius: 5, // how wide the shadow spreads
-                    offset: Offset(0, -6), // x: 0, y: -5 (upward shadow)
-                  ),
-                ],
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2), // light shadow
+                  blurRadius: 20, // softness of the shadow
+                  spreadRadius: 5, // how wide the shadow spreads
+                  offset: Offset(0, -6), // x: 0, y: -5 (upward shadow)
+                ),
+              ],
+            ),
 
-              child: Obx(() {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 28),
-                    Padding(
+            child: Obx(() {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: 28),
+                  GestureDetector(
+                    onTap: () {
+                      ctrl.toggleDtails();
+                    },
+                    child: Padding(
                       padding: const EdgeInsets.only(
                         left: 16,
                         right: 16,
@@ -350,231 +352,247 @@ class Home extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(height: 8),
-                    ctrl.showdetails.value == false
-                        ? Text(
-                            "ETA : ${ctrl.eta.value}",
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w400,
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                ctrl.distancetoLocation.value,
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 20,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              Text(
-                                "ETA : ${ctrl.eta.value}",
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 16,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
+                  ),
+                  SizedBox(height: 8),
+                  ctrl.showdetails.value == false
+                      ? Text(
+                          "ETA : ${ctrl.eta.value}",
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 16,
+                            color: Colors.grey,
                           ),
-                    ctrl.showdetails.value == false
-                        ? SizedBox(height: 23)
-                        : Column(
-                            children: [
-                              SizedBox(height: 18),
-                              Divider(),
-                              ctrl.showadditionalDetails.value == true
-                                  ? Column(
-                                      children: [
-                                        SizedBox(height: 24),
-                                        ctrl.imageList.isNotEmpty
-                                            ? Text(
-                                                "Photos & videos",
-                                                style: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 18,
-                                                  color: Color(0xff353459),
-                                                ),
-                                              )
-                                            : SizedBox(),
-                                        SizedBox(height: 12),
-                                        ctrl.imageList.isNotEmpty
-                                            ? Container(
-                                                height: 130,
-                                                color: Colors.white,
-                                                padding: EdgeInsets.only(
-                                                  top: 16,
-                                                  left: 16,
-                                                  right: 16,
-                                                  bottom: 16,
-                                                ),
-                                                child: ListView.builder(
-                                                  scrollDirection:
-                                                      Axis.horizontal,
-                                                  itemCount:
-                                                      ctrl.imageList.length,
-                                                  itemBuilder: (context, index) {
-                                                    return Container(
-                                                      margin:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 6,
-                                                          ),
-                                                      width: 100,
-                                                      color: Colors
-                                                          .grey, // Adjust as needed
-                                                      child: Image.network(
-                                                        ctrl.imageList[index],
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              )
-                                            : SizedBox(),
-                                        SizedBox(height: 24),
-                                        ctrl.audioList.isNotEmpty
-                                            ? Text(
-                                                "Audio Recording",
-                                                style: GoogleFonts.poppins(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 18,
-                                                  color: Color(0xff353459),
-                                                ),
-                                              )
-                                            : SizedBox(),
-                                        SizedBox(height: 12),
-                                        ctrl.audioList.isNotEmpty
-                                            ? Container(
-                                                padding: EdgeInsets.only(
-                                                  right: 16,
-                                                  left: 16,
-                                                ),
-                                                height: 110,
-                                                color: Colors.white,
-                                                child: ListView.builder(
-                                                  itemBuilder:
-                                                      (context, index) {
-                                                        return RecTile(
-                                                          index: index,
-                                                        );
-                                                      },
-                                                  itemCount:
-                                                      ctrl.audioList.length,
-                                                ),
-                                              )
-                                            : SizedBox(),
-                                      ],
-                                    )
-                                  : Padding(
-                                      padding: const EdgeInsets.only(
-                                        left: 24,
-                                        right: 24,
-                                        top: 18,
-                                      ),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          ctrl.toggleadditionalDetails();
-                                        },
-                                        child: Container(
-                                          padding: EdgeInsets.only(
-                                            top: 14,
-                                            bottom: 14,
-                                            left: 20,
-                                            right: 20,
-                                          ),
-                                          width: double.infinity,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              32,
-                                            ),
-                                            border: Border.all(
-                                              color: Color(0xff3534594d),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                "View Additional Details",
-                                                style: GoogleFonts.poppins(
-                                                  color: Color(0xff353459),
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 22,
-                                                ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Text(
+                              ctrl.distancetoLocation.value,
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 20,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Text(
+                              "ETA : ${ctrl.eta.value}",
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                  ctrl.showdetails.value == false
+                      ? SizedBox(height: 23)
+                      : Column(
+                          children: [
+                            SizedBox(height: 18),
+                            Divider(),
+                            ctrl.showadditionalDetails.value == true
+                                ? Column(
+                                    children: [
+                                      SizedBox(height: 24),
+                                      ctrl.imageList.isNotEmpty
+                                          ? Text(
+                                              "Photos & videos",
+                                              style: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 18,
+                                                color: Color(0xff353459),
                                               ),
-                                            ],
+                                            )
+                                          : SizedBox(),
+                                      SizedBox(height: 12),
+                                      ctrl.imageList.isNotEmpty
+                                          ? Container(
+                                              height: 130,
+                                              color: Colors.white,
+                                              padding: EdgeInsets.only(
+                                                top: 16,
+                                                left: 16,
+                                                right: 16,
+                                                bottom: 16,
+                                              ),
+                                              child: ListView.builder(
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                itemCount:
+                                                    ctrl.imageList.length,
+                                                itemBuilder: (context, index) {
+                                                  return Container(
+                                                    margin:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 6,
+                                                        ),
+                                                    width: 100,
+                                                    color: Colors
+                                                        .grey, // Adjust as needed
+                                                    child: Image.network(
+                                                      ctrl.imageList[index],
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            )
+                                          : SizedBox(),
+                                      SizedBox(height: 24),
+                                      ctrl.audioList.isNotEmpty
+                                          ? Text(
+                                              "Audio Recording",
+                                              style: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 18,
+                                                color: Color(0xff353459),
+                                              ),
+                                            )
+                                          : SizedBox(),
+                                      SizedBox(height: 12),
+                                      ctrl.audioList.isNotEmpty
+                                          ? Container(
+                                              padding: EdgeInsets.only(
+                                                right: 16,
+                                                left: 16,
+                                              ),
+                                              height: 110,
+                                              color: Colors.white,
+                                              child: ListView.builder(
+                                                itemBuilder: (context, index) {
+                                                  return RecTile(index: index);
+                                                },
+                                                itemCount:
+                                                    ctrl.audioList.length,
+                                              ),
+                                            )
+                                          : SizedBox(),
+                                    ],
+                                  )
+                                : Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 24,
+                                      right: 24,
+                                      top: 18,
+                                    ),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        ctrl.toggleadditionalDetails();
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.only(
+                                          top: 14,
+                                          bottom: 14,
+                                          left: 20,
+                                          right: 20,
+                                        ),
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            32,
                                           ),
+                                          border: Border.all(
+                                            color: Color(0xff3534594d),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              "View Additional Details",
+                                              style: GoogleFonts.poppins(
+                                                color: Color(0xff353459),
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 22,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 24,
-                                  right: 24,
-                                  bottom: 24,
-                                  top: 18,
-                                ),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    ctrl.makePhoneCall(
-                                      ctrl.patientPhoneNumber.value,
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.only(
-                                      top: 14,
-                                      bottom: 14,
-                                      left: 20,
-                                      right: 20,
-                                    ),
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(50),
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Color(0xffE75757),
-                                          Color(0xff8C0707),
-                                        ],
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        SizedBox(width: 10),
-                                        SizedBox(
-                                          height: 24,
-                                          width: 24,
-                                          child: Image.asset(
-                                            "assets/icons/phone.png",
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          "call Patient",
-                                          style: GoogleFonts.poppins(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 20,
-                                          ),
-                                        ),
+                                  ),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 24,
+                                right: 24,
+                                top: 18,
+                              ),
+                              child: GestureDetector(
+                                onTap: () {
+                                  ctrl.makePhoneCall(
+                                    ctrl.patientPhoneNumber.value,
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.only(
+                                    top: 14,
+                                    bottom: 14,
+                                    left: 20,
+                                    right: 20,
+                                  ),
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(50),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xffE75757),
+                                        Color(0xff8C0707),
                                       ],
                                     ),
                                   ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(width: 10),
+                                      SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: Image.asset(
+                                          "assets/icons/phone.png",
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        "call Patient",
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ],
-                          ),
-                  ],
-                );
-              }),
-            ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top: 14,
+                                bottom: 14,
+                                left: 20,
+                                right: 20,
+                              ),
+                              child: Rideclosebutton(
+                                onPressed: () {
+                                  ctrl.onRideEnd(
+                                    message: {
+                                      "type": "ride_completed",
+                                      "ride_id": ctrl.rideID.value,
+                                      "driver_id": ctrl.id.value,
+                                      "user_id": ctrl.patientId.value,
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                            SizedBox(height: 24),
+                          ],
+                        ),
+                ],
+              );
+            }),
           );
         }
       }),
