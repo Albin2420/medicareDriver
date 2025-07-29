@@ -7,6 +7,8 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/foundation.dart';
@@ -16,9 +18,12 @@ import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart' as latlng;
+import 'package:medicaredriver/src/data/repositories/check-ride/check-rideRepoImpl.dart';
 import 'package:medicaredriver/src/data/repositories/location/commonLocation/locationrepoimpl.dart';
 import 'package:medicaredriver/src/data/repositories/location/driverlocationInTrip/tripLocationrepoimpl.dart';
 import 'package:medicaredriver/src/data/repositories/response/driverResponseImpl.dart';
+import 'package:medicaredriver/src/data/services/hive_services/rideDetails/ride_model.dart';
+import 'package:medicaredriver/src/domain/repositories/check-ride/check-rideRepo.dart';
 import 'package:medicaredriver/src/domain/repositories/location/commonLocation/locationrepo.dart';
 import 'package:medicaredriver/src/domain/repositories/location/driverlocationInTrip/tripLocationRepo.dart';
 import 'package:medicaredriver/src/domain/repositories/response/driverresponse.dart';
@@ -61,7 +66,7 @@ class Homecontroller extends GetxController {
 
   //trip details
   RxBool isonTrip = RxBool(false);
-  RxInt rideId = RxInt(-1);
+  RxInt rideID = RxInt(-1);
   RxString patientLandmark = RxString("");
   RxString assignMentId = RxString("");
   RxString patientPhoneNumber = RxString("");
@@ -73,6 +78,7 @@ class Homecontroller extends GetxController {
   RxBool showadditionalDetails = RxBool(false);
 
   RxInt id = RxInt(-1);
+  RxInt patientId = RxInt(-1);
 
   var imageList = [].obs;
   var audioList = [].obs;
@@ -83,13 +89,105 @@ class Homecontroller extends GetxController {
   final RxBool isPlaying = false.obs;
   final RxInt currentplayingIndex = (-1).obs;
 
+  RxInt previousRideId = RxInt(-1);
+  CheckRiderepo checkRidedetail = CheckRiderepoimpl();
+
+  static const String _boxName = 'ridemodel';
+  late Box<RideModel> _rideBox;
+
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
-    log("Home controller initialized()");
-    accessToken.value = (await ctrlr.getAccessToken())!;
-    id.value = await ctrlr.getId();
+    _initBox();
+    _initializeController();
+  }
+
+  Future<void> _initBox() async {
+    _rideBox = await Hive.openBox<RideModel>(_boxName);
+  }
+
+  Future<void> _initializeController() async {
+    log("🏠 HomeController initialized()");
+
+    // Start listening to location changes
     startListeningToLocation();
+
+    // Get token, id, and previous ride ID
+    final token = await ctrlr.getAccessToken();
+    if (token == null) {
+      log("❌ Failed to fetch access token");
+      return;
+    }
+    accessToken.value = token;
+
+    id.value = await ctrlr.getId();
+    previousRideId.value = await ctrlr.getRideId();
+
+    // Establish WebSocket connection early if required
+    connect(drid: id.value);
+
+    // If there's a previous ride, wait for valid location before proceeding
+    if (previousRideId.value != -1) {
+      await _waitForValidLocation();
+      log("rideId found:$previousRideId");
+      checkRide(rideId: previousRideId.value);
+    } else {
+      log("ℹ️ No previous ride found.");
+    }
+  }
+
+  Future<void> _waitForValidLocation({
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    final start = DateTime.now();
+    const interval = Duration(milliseconds: 300);
+
+    while ((lat.value == 0.0 || long.value == 0.0) &&
+        DateTime.now().difference(start) < timeout) {
+      await Future.delayed(interval);
+    }
+
+    if (lat.value != 0.0 && long.value != 0.0) {
+      log("📍 Location received: (${lat.value}, ${long.value})");
+    } else {
+      log("⚠️ Timed out waiting for location.");
+    }
+  }
+
+  void checkRide({required int rideId}) async {
+    try {
+      final res = await checkRidedetail.checkRidestatus(
+        accesstoken: accessToken.value,
+        rideId: previousRideId.value,
+      );
+      res.fold(
+        (l) {
+          log("failed in checking");
+        },
+        (R) async {
+          if (R['ongoing'] == true) {
+            Fluttertoast.showToast(msg: "still in ride");
+            await getDistanceAndRouteWithFallback(
+              startLat: lat.value,
+              startLon: long.value,
+              endLat: R['latitude'],
+              endLon: R['longitude'],
+            );
+
+            if (isok.value == true) {
+              patientId.value = R['user_id'];
+              patientPhoneNumber.value = R['mobile'];
+              patientLandmark.value = R['landmark'];
+              showroute.value = true;
+              isonTrip.value = true;
+              rideID.value = rideId;
+            }
+          }
+        },
+      );
+    } catch (e) {
+      log("error in checkRide():$e");
+    }
   }
 
   void toggleDtails() {
@@ -124,7 +222,7 @@ class Homecontroller extends GetxController {
       _positionStream = Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          distanceFilter: 20, // meters (minimum distance before update)
+          // distanceFilter: 20, // meters (minimum distance before update)
         ),
       );
 
@@ -139,9 +237,9 @@ class Homecontroller extends GetxController {
           accesstoken: accessToken.value,
         );
 
-        if (isonTrip.value && rideId.value != -1) {
+        if (isonTrip.value && rideID.value != -1) {
           islocationupdatedonTrip = await triplocationrepo.location(
-            rideId: rideId.value,
+            rideId: rideID.value,
             longitude: position.longitude,
             latitude: position.latitude,
             accesstoken: accessToken.value,
@@ -149,7 +247,6 @@ class Homecontroller extends GetxController {
           checkAndRemoveReachedPoint(lat.value, long.value);
         }
       });
-      connect(id: id.value); //remove hardcode value
     } catch (e) {
       log("error in startListeningToLocation():$e");
     }
@@ -175,17 +272,13 @@ class Homecontroller extends GetxController {
           "🚗 Reached waypoint: ${nextPoint.latitude}, ${nextPoint.longitude} (Dist: ${distance.toStringAsFixed(2)}m)",
         );
         routePoints.removeAt(0);
-      } else {
-        log("too far");
       }
-    } else {
-      log("points empty");
     }
   }
 
-  void connect({required int id}) {
+  void connect({required int drid}) {
     try {
-      final uri = Uri.parse('ws://13.203.89.173:8001/ws/driver/$id');
+      final uri = Uri.parse('ws://13.203.89.173:8001/ws/driver/$drid');
 
       channel = WebSocketChannel.connect(uri);
       log('🔌 Connecting to $uri');
@@ -193,14 +286,24 @@ class Homecontroller extends GetxController {
       channel!.stream.listen(
         (data) async {
           try {
+            log("in ws $drid :$data");
+
             dt.value = jsonDecode(data);
+
+            if (dt['type'] == "ping") {
+              log("catched");
+            }
 
             if (dt['type'] == "ride_notification") {
               bookingNotification(data: data);
             }
 
             if (dt['type'] == "ride_confirmation") {
-              rideConfirmation();
+              rideConfirmation(data: data);
+            }
+
+            if (dt['type'] == "ride_completed") {
+              rideCompleted();
             }
 
             if (dt['type'] == "image_uploade" || dt['type'] == "audio upload") {
@@ -213,11 +316,12 @@ class Homecontroller extends GetxController {
               }
             }
           } catch (e) {
-            log("inside data:$e");
+            log("error in connect() : $e");
           }
         },
         onDone: () {
           log('❌ Connection closed.');
+          connect(drid: id.value);
         },
         onError: (error) {
           log('🚨 Stream error: $error');
@@ -229,10 +333,32 @@ class Homecontroller extends GetxController {
     }
   }
 
+  void rideCompleted() {
+    try {
+      ctrlr.clearRideId();
+      clearRide();
+    } catch (e) {
+      log("error in rideCompleted():$e");
+    }
+  }
+
+  void onRideEnd({required dynamic message}) {
+    try {
+      if (channel != null) {
+        channel!.sink.add(jsonEncode(message));
+        log("📤 Sent: $message");
+      } else {
+        log("❌ Cannot send message, WebSocket not connected.");
+      }
+    } catch (e) {
+      log("error in sendResponse():$e");
+    }
+  }
+
   Future<void> bookingNotification({required dynamic data}) async {
     try {
       var dt = jsonDecode(data);
-      await getDistanceAndRouteFromOSRM(
+      await getDistanceAndRouteWithFallback(
         startLat: lat.value,
         startLon: long.value,
         endLat: dt['location']['latitude'],
@@ -240,27 +366,53 @@ class Homecontroller extends GetxController {
       );
 
       if (isok.value == true) {
-        rideId.value = dt["ride_id"];
+        rideID.value = dt["ride_id"];
         patientPhoneNumber.value = dt['mobile'];
         patientLandmark.value = dt['location']['landmark'];
         socketMessage.value = data;
       }
     } catch (e) {
-      log("bookingNotification():$e");
+      log("Error in bookingNotification():$e");
     }
   }
 
-  Future<void> rideConfirmation() async {
+  Future<void> rideConfirmation({required dynamic data}) async {
     try {
+      var dt = jsonDecode(data);
+
+      log("in confirmation:$dt");
+
+      patientId.value = dt['user_id'];
+      rideID.value = dt['ride_id'];
       showroute.value = true;
       isonTrip.value = true;
+      await ctrlr.saveRideId(rideId: dt['ride_id'].toString());
       socketMessage.value = null;
     } catch (e) {
       log("Error in rideConfirmation():$e");
     }
   }
 
-  void sendResponse({required Map<String, dynamic> message}) {
+  Future<void> clearRide() async {
+    try {
+      routePoints.clear();
+      imageList.clear();
+      audioList.clear();
+      isok.value = false;
+      showroute.value = false;
+      isonTrip.value = false;
+      rideID.value = -1;
+      patientPhoneNumber.value = '';
+      patientId.value = -1;
+      patientLandmark.value = '';
+      eta.value = '';
+      socketMessage.value = null;
+    } catch (e) {
+      log("Error in clearRide():$e");
+    }
+  }
+
+  Future<void> sendRideResponse({required Map<String, dynamic> message}) async {
     try {
       if (channel != null) {
         channel!.sink.add(jsonEncode(message));
@@ -320,7 +472,7 @@ class Homecontroller extends GetxController {
     }
   }
 
-  Future<void> getDistanceAndRouteFromOSRM({
+  Future<void> getDistanceAndRouteWithFallback({
     required double startLat,
     required double startLon,
     required double endLat,
@@ -328,33 +480,35 @@ class Homecontroller extends GetxController {
     String mode = 'driving', // or 'walking'
   }) async {
     try {
-      // ✅ Validate coordinates
       if (!_isValidCoordinate(startLat) ||
           !_isValidCoordinate(startLon) ||
           !_isValidCoordinate(endLat) ||
           !_isValidCoordinate(endLon)) {
-        log("❌ Invalid coordinates detected");
-        throw Exception("Invalid coordinates provided.");
+        log("❌ Invalid coordinates");
+        throw Exception("Invalid coordinates");
       }
 
-      // ✅ Check if coordinates are the same
       if (startLat == endLat && startLon == endLon) {
-        log("🟡 Start and end coordinates are the same. No route needed.");
+        log("🟡 Same start and end point");
         distancetoLocation.value = "0 m";
         eta.value = "0 sec";
         routePoints.clear();
         return;
       }
 
-      final url = Uri.parse(
+      // Primary: OSRM
+      final osrmUrl = Uri.parse(
         'http://router.project-osrm.org/route/v1/$mode/'
         '$startLon,$startLat;$endLon,$endLat?overview=full&geometries=geojson',
       );
 
-      final response = await http.get(url);
+      log("🌐 Trying OSRM: $osrmUrl");
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      final osrmResponse = await http.get(osrmUrl);
+
+      if (osrmResponse.statusCode == 200) {
+        log("✅ OSRM success");
+        final data = json.decode(osrmResponse.body);
         final route = data['routes'][0];
 
         double distanceMeters = route['distance'].toDouble();
@@ -368,41 +522,81 @@ class Homecontroller extends GetxController {
           routePoints.add(latlng.LatLng(lat, lon));
         }
 
-        // Distance formatting
         distancetoLocation.value = distanceMeters < 1000
             ? "${distanceMeters.toStringAsFixed(0)} m"
             : "${(distanceMeters / 1000).toStringAsFixed(2)} km";
 
-        // Duration formatting
-        String durationFormatted;
-        if (durationSeconds < 60) {
-          durationFormatted = "${durationSeconds.toStringAsFixed(0)} sec";
-        } else if (durationSeconds < 3600) {
-          durationFormatted =
-              "${(durationSeconds / 60).toStringAsFixed(1)} min";
-        } else {
-          durationFormatted =
-              "${(durationSeconds / 3600).toStringAsFixed(1)} hr";
-        }
+        eta.value = durationSeconds < 60
+            ? "${durationSeconds.toStringAsFixed(0)} sec"
+            : durationSeconds < 3600
+            ? "${(durationSeconds / 60).toStringAsFixed(1)} min"
+            : "${(durationSeconds / 3600).toStringAsFixed(1)} hr";
 
-        eta.value = durationFormatted;
-
-        log(
-          "Distance: ${distancetoLocation.value}, Duration: $durationFormatted",
-        );
-
+        isok.value = true;
         endLongitude.value = endLon;
         endLatitude.value = endLat;
-        isok.value = true;
+        return;
       } else {
-        isok.value = false;
-        throw Exception(
-          '❌ Failed to get route from OSRM: ${response.statusCode}',
+        log(
+          "⚠️ OSRM failed: ${osrmResponse.statusCode}. Falling back to GraphHopper.",
         );
       }
     } catch (e) {
+      log("❌ OSRM threw error: $e. Falling back to GraphHopper.");
+    }
+
+    // Fallback: GraphHopper
+    try {
+      final apiKey = fs.dotenv.env['graphHopperKey']; // Replace with actual key
+      final ghUrl = Uri.parse(
+        'https://graphhopper.com/api/1/route?'
+        'point=$startLat,$startLon&'
+        'point=$endLat,$endLon&vehicle=car&locale=en&instructions=false&points_encoded=false&key=$apiKey',
+      );
+
+      log("🌐 Trying GraphHopper: $ghUrl");
+
+      final ghResponse = await http.get(ghUrl);
+
+      if (ghResponse.statusCode == 200) {
+        final data = json.decode(ghResponse.body);
+        final path = data['paths'][0];
+
+        double distanceMeters = path['distance'].toDouble();
+        double durationSeconds = path['time'] / 1000.0; // ms to sec
+        List coordinates = path['points']['coordinates'];
+
+        routePoints.clear();
+        for (var point in coordinates) {
+          final lat = point[1] as double;
+          final lon = point[0] as double;
+          routePoints.add(latlng.LatLng(lat, lon));
+        }
+
+        distancetoLocation.value = distanceMeters < 1000
+            ? "${distanceMeters.toStringAsFixed(0)} m"
+            : "${(distanceMeters / 1000).toStringAsFixed(2)} km";
+
+        eta.value = durationSeconds < 60
+            ? "${durationSeconds.toStringAsFixed(0)} sec"
+            : durationSeconds < 3600
+            ? "${(durationSeconds / 60).toStringAsFixed(1)} min"
+            : "${(durationSeconds / 3600).toStringAsFixed(1)} hr";
+
+        isok.value = true;
+        endLongitude.value = endLon;
+        endLatitude.value = endLat;
+        log(
+          "✅ Fallback GraphHopper success: Distance ${distancetoLocation.value}, ETA ${eta.value}",
+        );
+        return;
+      } else {
+        isok.value = false;
+        throw Exception('❌ GraphHopper failed: ${ghResponse.statusCode}');
+      }
+    } catch (e) {
       isok.value = false;
-      log("❌ Error in getDistanceAndRouteFromOSRM(): $e");
+      log("❌ Fallback GraphHopper error: $e");
     }
   }
 
