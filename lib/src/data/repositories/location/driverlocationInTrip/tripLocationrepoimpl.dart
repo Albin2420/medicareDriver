@@ -17,9 +17,11 @@ class Triplocationrepoimpl extends Triplocationrepo {
   }) async {
     final url =
         '${Url.baseUrl}/${Url.driverlocOnTrip}?ride_id=$rideId&latitude=$latitude&longitude=$longitude';
-    log("POST: $url    rideId:$rideId");
+
 
     try {
+      log(" 🔌 POST : $url");
+
       final response = await _dio.post(
         url,
         options: Options(
@@ -30,21 +32,20 @@ class Triplocationrepoimpl extends Triplocationrepo {
         ),
       );
 
-      log("Response Status: ${response.statusCode}");
-      log("Response Body: ${response.data}");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         // final responseBody = response.data as Map<String, dynamic>;
+        log("✅ Response Status of $url: ${response.statusCode}");
 
         return right({});
       } else {
+        log("❌ Response Status of $url: ${response.statusCode}");
         return left(Failure(message: 'Server error: ${response.statusCode}'));
       }
     } on DioException catch (e) {
-      log("Dio error: ${e.message}");
+      log("❌ Dio error: ${e.message}");
       return left(Failure(message: 'Network error: ${e.message}'));
     } catch (e) {
-      log("Unexpected error: $e");
+      log("💥 Unexpected error: $e");
       return left(Failure(message: 'Unexpected error occurred'));
     }
   }

@@ -13,9 +13,10 @@ class Tokenrepoimpl extends Tokenrepo {
     required String accesstoken,
   }) async {
     final url = '${Url.baseUrl}/${Url.checkExpiry}';
-    log("POST: $url");
 
     try {
+      log(" 🔌 GET : $url");
+
       final response = await _dio.get(
         url,
         options: Options(
@@ -26,20 +27,19 @@ class Tokenrepoimpl extends Tokenrepo {
         ),
       );
 
-      log("TResponse Status: ${response.statusCode}");
-      log("TResponse Body: ${response.data}");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
+        log("✅ Response Status of $url: ${response.statusCode}");
         final responseBody = response.data as Map<String, dynamic>;
         return Right({"expired": responseBody['expired']});
       } else {
+        log("❌ Response Status of $url: ${response.statusCode}");
         return left(Failure(message: 'Server error: ${response.statusCode}'));
       }
     } on DioException catch (e) {
-      log("Dio error in checkToken() : ${e.message}");
+      log("❌ Dio error in $url : ${e.message}");
       return left(Failure(message: 'Network error: ${e.message}'));
     } catch (e) {
-      log("Unexpected error in checkToken() : $e");
+      log("💥 Unexpected error in checkToken() : $e");
       return left(Failure(message: 'Unexpected error occurred'));
     }
   }
