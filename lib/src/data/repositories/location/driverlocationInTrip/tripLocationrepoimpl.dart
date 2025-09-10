@@ -18,7 +18,6 @@ class Triplocationrepoimpl extends Triplocationrepo {
     final url =
         '${Url.baseUrl}/${Url.driverlocOnTrip}?ride_id=$rideId&latitude=$latitude&longitude=$longitude';
 
-
     try {
       log(" 🔌 POST : $url");
 
