@@ -1,12 +1,8 @@
-// controllers are use in this folder
-
 import 'dart:convert';
 import 'dart:developer';
 
-import 'dart:convert';
-
 import 'package:flutter/widgets.dart';
-import 'package:flutter_map/flutter_map.dart';
+
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
@@ -121,15 +117,13 @@ class Homecontroller extends GetxController {
     accessToken.value = token;
 
     id.value = await ctrlr.getId();
-    previousRideId.value = await ctrlr.getRideId();
 
-    // Establish WebSocket connection early if required
     connect(drid: id.value);
 
-    // If there's a previous ride, wait for valid location before proceeding
+    previousRideId.value = await ctrlr.getRideId();
+
     if (previousRideId.value != -1) {
       await _waitForValidLocation();
-      log("rideId found:$previousRideId");
       checkRide(rideId: previousRideId.value);
     } else {
       log("ℹ️ No previous ride found.");
@@ -178,9 +172,9 @@ class Homecontroller extends GetxController {
               patientId.value = R['user_id'];
               patientPhoneNumber.value = R['mobile'];
               patientLandmark.value = R['landmark'];
+              rideID.value = rideId;
               showroute.value = true;
               isonTrip.value = true;
-              rideID.value = rideId;
             }
           }
         },
@@ -222,7 +216,7 @@ class Homecontroller extends GetxController {
       _positionStream = Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          // distanceFilter: 20, // meters (minimum distance before update)
+          distanceFilter: 20, // meters (minimum distance before update)
         ),
       );
 
@@ -289,10 +283,6 @@ class Homecontroller extends GetxController {
             log("in ws $drid :$data");
 
             dt.value = jsonDecode(data);
-
-            if (dt['type'] == "ping") {
-              log("catched");
-            }
 
             if (dt['type'] == "ride_notification") {
               bookingNotification(data: data);
@@ -379,9 +369,6 @@ class Homecontroller extends GetxController {
   Future<void> rideConfirmation({required dynamic data}) async {
     try {
       var dt = jsonDecode(data);
-
-      log("in confirmation:$dt");
-
       patientId.value = dt['user_id'];
       rideID.value = dt['ride_id'];
       showroute.value = true;

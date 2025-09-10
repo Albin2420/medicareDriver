@@ -15,9 +15,12 @@ class CheckRiderepoimpl extends CheckRiderepo {
     required int rideId,
   }) async {
     final url = '${Url.baseUrl}/${Url.driverCheckonGoingRide}';
-    log("POST: $url  rideId:$rideId");
 
     try {
+      log(" 🔌 POST : $url");
+
+      log("📤 Sending Request Data:\n{'ride_id':$rideId}");
+
       final response = await _dio.post(
         url,
         options: Options(
@@ -29,10 +32,9 @@ class CheckRiderepoimpl extends CheckRiderepo {
         data: jsonEncode({"ride_id": rideId}),
       );
 
-      log("Response Status: ${response.statusCode}");
-      log("Response Body: ${response.data}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        log("✅ Response Status of $url: ${response.statusCode}");
         final responseBody = response.data as Map<String, dynamic>;
 
         if (responseBody['ongoing'] == true) {
@@ -48,13 +50,14 @@ class CheckRiderepoimpl extends CheckRiderepo {
           return right({"ongoing": responseBody['ongoing']});
         }
       } else {
+        log("❌ Response Status of $url: ${response.statusCode}");
         return left(Failure(message: 'Server error: ${response.statusCode}'));
       }
     } on DioException catch (e) {
-      log("Dio error: ${e.message}");
+      log("❌ Dio error: ${e.message}");
       return left(Failure(message: 'Network error: ${e.message}'));
     } catch (e) {
-      log("Unexpected error in checkRidestatus(): $e");
+      log("💥 Unexpected error in checkRidestatus(): $e");
       return left(Failure(message: 'Unexpected error occurred'));
     }
   }

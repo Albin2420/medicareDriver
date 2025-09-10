@@ -45,6 +45,7 @@
 //   }
 // }
 
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:dartz/dartz.dart';
@@ -66,39 +67,42 @@ class DriverRegistrationRepoImpl extends DriverRegistrationRepo {
     required String driverPhoneNumber,
   }) async {
     final url = '${Url.baseUrl}/${Url.registration}';
-    log("POST: $url");
 
     try {
+      final requestedData = jsonEncode({
+        'owner_name': ownerName,
+        'owner_number': ownerNumber,
+        'owner_email': ownerEmail,
+        'ambulance_number': ambulanceNumber,
+        'driver_name': driverName,
+        'mobile': driverPhoneNumber,
+      });
+
+      log(" 🔌 POST : $url");
+      log("📤 Sending Request Data:\n$requestedData");
+
       final response = await _dio.post(
         url,
         options: Options(headers: {'Content-Type': 'application/json'}),
-        data: {
-          'owner_name': ownerName,
-          'owner_number': ownerNumber,
-          'owner_email': ownerEmail,
-          'ambulance_number': ambulanceNumber,
-          'driver_name': driverName,
-          'mobile': driverPhoneNumber,
-        },
+        data: requestedData
       );
 
-      log("Response Status: ${response.statusCode}");
-      log("Response Body: ${response.data}");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
+        log("✅ Response Status of $url: ${response.statusCode}");
         final responseBody = response.data as Map<String, dynamic>;
         return right({
           "access_token": responseBody["access_token"],
           "id": responseBody["driver"]['id'],
         });
       } else {
+        log("❌ Response Status of $url: ${response.statusCode}");
         return left(Failure(message: 'Server error: ${response.statusCode}'));
       }
     } on DioException catch (e) {
-      log("Dio error: ${e.message}");
+      log("❌ Dio error: ${e.message}");
       return left(Failure(message: 'Network error: ${e.message}'));
     } catch (e) {
-      log("Unexpected error: $e");
+      log("💥 Unexpected error: $e");
       return left(Failure(message: 'Unexpected error occurred'));
     }
   }
