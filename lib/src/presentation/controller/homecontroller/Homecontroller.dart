@@ -32,6 +32,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart' as fs;
 import 'package:audioplayers/audioplayers.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 class Homecontroller extends GetxController {
   RxBool showroute = RxBool(false);
   Stream<Position>? _positionStream;
@@ -167,6 +169,7 @@ class Homecontroller extends GetxController {
               endLat: R['latitude'],
               endLon: R['longitude'],
             );
+
 
             if (isok.value == true) {
               patientId.value = R['user_id'];
@@ -456,6 +459,25 @@ class Homecontroller extends GetxController {
       await FlutterPhoneDirectCaller.callNumber(phoneNumber);
     } catch (e) {
       log("error:$e");
+    }
+  }
+
+  Future<void> navigateWithGoogleMaps({
+    required double destinationLat,
+    required double destinationLng,
+  }) async {
+    try{
+      final url = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=$destinationLat,$destinationLng&travelmode=driving',
+      );
+
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch Google Maps for navigation';
+      }
+    }catch(e){
+      log("error in navigateWithGoogleMaps():$e");
     }
   }
 

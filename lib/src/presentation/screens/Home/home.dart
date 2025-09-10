@@ -349,6 +349,16 @@ class Home extends StatelessWidget {
                             ),
                           ),
                           SizedBox(width: 18),
+                          GestureDetector(
+                            onTap: (){
+                              ctrl.navigateWithGoogleMaps(destinationLat: ctrl.endLatitude.value,destinationLng: ctrl.endLongitude.value);
+                            },
+                            child: SizedBox(
+                              width: 20,
+                              height: 28,
+                              child: Image.asset("assets/icons/remap.png"),
+                            ),
+                          ),
                         ],
                       ),
                     ),
