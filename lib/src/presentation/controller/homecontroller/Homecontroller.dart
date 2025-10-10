@@ -170,7 +170,6 @@ class Homecontroller extends GetxController {
               endLon: R['longitude'],
             );
 
-
             if (isok.value == true) {
               patientId.value = R['user_id'];
               patientPhoneNumber.value = R['mobile'];
@@ -466,7 +465,7 @@ class Homecontroller extends GetxController {
     required double destinationLat,
     required double destinationLng,
   }) async {
-    try{
+    try {
       final url = Uri.parse(
         'https://www.google.com/maps/dir/?api=1&destination=$destinationLat,$destinationLng&travelmode=driving',
       );
@@ -476,7 +475,7 @@ class Homecontroller extends GetxController {
       } else {
         throw 'Could not launch Google Maps for navigation';
       }
-    }catch(e){
+    } catch (e) {
       log("error in navigateWithGoogleMaps():$e");
     }
   }

@@ -20,10 +20,9 @@ class Locationrepoimpl extends Locationrepo {
     final url = '${Url.baseUrl}/${Url.driverloc}';
 
     try {
-
       final requestData = jsonEncode({
         "latitude": latitude,
-        "longitude":longitude
+        "longitude": longitude,
       });
 
       log(" 🔌 POST : $url");
